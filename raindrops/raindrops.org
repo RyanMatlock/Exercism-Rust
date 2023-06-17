@@ -1,0 +1,27 @@
+#+title: Raindrops
+
+* First iteration
+
+#+begin_src rustic
+  pub fn raindrops(n: u32) -> String {
+      let sounds: [(u32, &str); 3] = [
+          (3, "Pling"),
+          (5, "Plang"),
+          (7, "Plong")
+      ];
+      let sounds = sounds.iter()
+          .filter(|(divisor, _)| n % divisor == 0)
+          .map(|(_, sound)| sound.to_string())
+          .collect::<Vec<_>>()
+          .join("");
+      if sounds.eq(&String::from("")) {
+          n.to_string()
+      } else {
+          sounds
+      }
+  }
+#+end_src
+
+* Concepts from community solutions
+[[https://exercism.org/tracks/rust/exercises/raindrops/solutions/jfmartin][jfmartin]]'s solution included the ~is_empty()~ function, which is obviously better
+than comparing to the empty string.

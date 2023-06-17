@@ -9,7 +9,7 @@ pub fn raindrops(n: u32) -> String {
         .map(|(_, sound)| sound.to_string())
         .collect::<Vec<_>>()
         .join("");
-    if sounds.eq(&String::from("")) {
+    if sounds.is_empty() {
         n.to_string()
     } else {
         sounds
