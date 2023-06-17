@@ -5,14 +5,13 @@ pub fn raindrops(n: u32) -> String {
         (7, "Plong")
     ];
     let sounds = sounds.iter()
-        .filter(|(divisor, _)| *n % *divisor == 0)
-        .map(|(_, sound)| *sound.to_string());
-    // match sounds.join("") {
-    //     "" => n.to_string(),
-    //     other => sounds.join("").to_string(),
-    // }
-    match sounds {
-        Some(arr) => arr,
-        None => [String; 0],
+        .filter(|(divisor, _)| n % divisor == 0)
+        .map(|(_, sound)| sound.to_string())
+        .collect::<Vec<_>>()
+        .join("");
+    if sounds.eq(&String::from("")) {
+        n.to_string()
+    } else {
+        sounds
     }
 }
