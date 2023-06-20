@@ -1,0 +1,27 @@
+#+title: Grains
+
+* Community solutions
+[[https://exercism.org/tracks/rust/exercises/grains/solutions/JaromirCharles][JaromirCharles]]'s solution:
+
+#+begin_src rustic
+  pub fn square(s: u32) -> u64 {
+      if s < 1 || s > 64 {
+          panic!("Square must be between 1 and 64");
+      }
+      2u64.pow(s - 1) as u64
+  }
+  pub fn total() -> u64 {
+      (1..65).fold(0, | sum, x | sum + square(x))
+  }
+#+end_src
+
+Things that are smart about this:
+1. Using ~s < 1~ instead of ~s <= 1~ because =s= is of type =u32=, thus it can't be
+   negative. (You could argue that maybe in some future update, the board might
+   start at a number greater than 1, so ≤ behavior may be preferable, but come
+   on.)
+2. using =2u64= as the base instead of ~const BASE: u64 = 2;~ is more concise and
+   probably more idiomatic (but jeez, Rust, way to add to the syntactical
+   burden).
+3. Using =fold= instead of =map= followed by =sum=. I need to get better about using
+   folds.
