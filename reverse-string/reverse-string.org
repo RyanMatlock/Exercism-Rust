@@ -85,3 +85,41 @@ This compiles, but it fails on most tests:
 Note that one of the failed tests involved wide characters, so you need to do
 something like =s.chars()=; see [[https://doc.rust-lang.org/stable/book/ch08-02-strings.html#methods-for-iterating-over-strings][Methods for Iterating Over Strings | The Rust
 Programming Language (§8.2)]].
+
+#+begin_src rustic
+  fn reverse_helper<'a>(s: &'a str, acc: Vec<&'a str>) -> Vec<&'a str> {
+      if s.is_empty() {
+          return acc
+      } else {
+          let mut new_vec = acc.clone();
+          new_vec.push(&s[0..1]);
+          reverse_helper(&s[1..], new_vec)
+      }
+  }
+#+end_src
+
+This still led to the same errors. Ohhh, I think I know what the issue is: I'm
+attempting to do this how I would in Lisp, but instead of ~cons~​ing onto the
+/front/ of a list, I'm appending onto the /end/ of a vector :facepalm:
+
+Fixed:
+
+#+begin_src rustic
+  fn reverse_helper<'a>(s: &'a str, acc: Vec<&'a str>) -> Vec<&'a str> {
+      if s.is_empty() {
+          return acc
+      } else {
+          let mut new_vec = vec!(&s[0..1]);
+          new_vec.extend(acc);
+          reverse_helper(&s[1..], new_vec)
+      }
+  }
+
+  pub fn reverse(input: &str) -> String {
+      reverse_helper(input, vec![])
+          .join("")
+  }
+#+end_src
+
+As expected, still failing the test for wide characters, but I'm passing
+everything else.
