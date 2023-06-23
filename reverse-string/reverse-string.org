@@ -132,3 +132,116 @@ of the answer).
 #+begin_src rustic
   let new_acc = [&vec!(c)[..], &acc].concat();
 #+end_src
+
+** "cannot return value referencing temporary value"
+
+#+begin_src shell
+  $ cargo c
+      Checking reverse_string v1.2.0 (/Users/<user>/Library/CloudStorage/Dropbox/projects/Exercism/rust/reverse-string)
+  error[E0515]: cannot return value referencing temporary value
+    --> src/lib.rs:18:9
+     |
+  8  |           let c = chars
+     |  _________________-
+  9  | |             .next()
+  10 | |             .expect("slice s isn't empty")
+  11 | |             .to_string()
+     | |________________________- temporary value created here
+  ...
+  18 |           reverse_helper(rest, new_vec)
+     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ returns a value referencing data owned by the current function
+
+  For more information about this error, try `rustc --explain E0515`.
+  error: could not compile `reverse_string` (lib) due to previous error
+#+end_src
+
+I think I know what to do. ~.as_str()~ is probably redundant because I'm doing
+~&vec!(c)[..]~ anyway, right? (Actually, my guess is probably not because
+~&vec!(c)[..]~ is a slice of a vector, not a string slice.) Yeah, tried that and
+got a mismatched type error: =expected `&[String]`, found `&Vec<&str>`=.
+
+See if you can use the ~split_first()~ method instead; see [[https://stackoverflow.com/a/72681129/2677392][How to split a string
+into the first character and the rest? | stackoverflow]].
+
+#+begin_src rustic
+  fn reverse_helper<'a>(s: &'a str, acc: Vec<&'a str>) -> Vec<&'a str> {
+      if s.is_empty() {
+          return acc
+      } else {
+          if let Some((c, rest)) = s.chars().collect::<Vec<char>>().split_first() {
+              let new_acc = [&vec!(c.to_string().as_str())[..], &acc].concat();
+              reverse_helper(rest.to_string().as_str(), new_acc)
+          }
+      }
+  }
+
+  pub fn reverse(input: &str) -> String {
+      reverse_helper(input, vec![])
+          .join("")
+  }
+#+end_src
+
+This is just a disaster that doesn't even compile.
+
+Let's try it a different way:
+
+#+begin_src rustic
+  fn reverse_helper<'a>(s: &'a str, acc: Vec<&'a str>) -> Vec<&'a str> {
+      if s.is_empty() {
+          return acc
+      } else {
+          let mut chars = s.chars();
+          let c = chars
+              .next()
+              .expect("string slice s isn't empty");
+          let c = format!("{c}").as_str();
+          let rest = chars.as_str();
+          let new_acc = [&vec!(c)[..], &acc[..]].concat();
+          reverse_helper(rest, new_acc)
+      }
+  }
+#+end_src
+
+Still not compiling for the same reason:
+
+#+begin_example
+  error[E0515]: cannot return value referencing temporary value
+    --> src/lib.rs:12:9
+     |
+  9  |         let c = format!("{c}").as_str();
+     |                 -------------- temporary value created here
+  ...
+  12 |         reverse_helper(rest, new_acc)
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ returns a value referencing data owned by the current function
+#+end_example
+
+** Passing!
+
+#+begin_src rustic
+  fn reverse_helper<'a>(s: &'a str, acc: Vec<String>) -> Vec<String> {
+      if s.is_empty() {
+          return acc
+      } else {
+          let mut chars = s.chars();
+          let c = chars
+              .next()
+              .expect("string slice s isn't empty");
+          let c = format!("{c}");
+          let rest = chars
+              .as_str()
+              .to_string();
+          let new_acc = [&vec!(c)[..], &acc[..]].concat();
+          reverse_helper(&rest, new_acc)
+      }
+  }
+
+  pub fn reverse(input: &str) -> String {
+      reverse_helper(input, vec![])
+          .join("")
+  }
+#+end_src
+
+This seems a little hacky because I didn't get the type for my helper function
+that I wanted, but hey, at least it works. To be fair, I did take the
+compiler's advice and switch to an owned type, so maybe it's something I had to
+do ¯\_(ツ)_/¯
