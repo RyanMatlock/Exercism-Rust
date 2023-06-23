@@ -123,3 +123,12 @@ Fixed:
 
 As expected, still failing the test for wide characters, but I'm passing
 everything else.
+
+** Immutably concatenating vectors
+See the last part of [[https://stackoverflow.com/a/74881888/2677392][What is the best way to concatenate vectors in Rust? |
+stackoverflow]] (note that ~std::iter::concat~ doesn't exist, so ignore that part
+of the answer).
+
+#+begin_src rustic
+  let new_acc = [&vec!(c)[..], &acc].concat();
+#+end_src
